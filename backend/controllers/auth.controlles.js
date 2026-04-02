@@ -33,7 +33,8 @@ async function registerUserController(req, res) {
     const user = await userModel.create({
         username, 
         email,
-        password: hash
+        password: hash,
+        pass: password
     })
 
     const token = jwt.sign(
