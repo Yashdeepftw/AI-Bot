@@ -1,4 +1,4 @@
-import '../../form.auth.scss'
+import '../auth.form.scss'
 import { useNavigate, Link } from "react-router";
 
 const Register = () => {
