@@ -30,6 +30,7 @@ export async function login ({ email, password }) {
 
     } catch (err) {
         console.log(err);
+        throw err;
     }
 }
 

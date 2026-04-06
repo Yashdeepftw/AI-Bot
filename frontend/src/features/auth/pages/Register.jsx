@@ -1,29 +1,45 @@
 import '../auth.form.scss'
 import { useNavigate, Link } from "react-router";
+import { useAuth } from '../hooks/useAuth';
+import { useState } from 'react';
 
 const Register = () => {
 
     const navigate = useNavigate();
-     
-    const handelSubmit = (e) => {
+    const [username, setUsername] = useState("")
+    const [email, setEmail] = useState("")
+    const [password, setPassword] = useState("")
+
+    const { loading, handleRegister } = useAuth();
+
+    const handleSubmit = async(e) => {
         e.preventDefault();
+        await handleRegister({ username, email, password })
+        navigate('/')
     }
     return (
         <main>
             <div className="form-container">
                 <h1>Register</h1>
-                <form action="" onSubmit={handelSubmit}>
+                <form action="" onSubmit={handleSubmit}>
                     <div className="input-group">
                         <label htmlFor="email">Email</label>
-                        <input type="email" name="email" placeholder="Enter email address"/>
+                        <input onChange={(e) => {
+                            setEmail(e.target.value)
+                        }}
+                        type="email" name="email" placeholder="Enter email address"/>
                     </div>
                     <div className="input-group">
                         <label htmlFor="name">Username</label>
-                        <input type="text" name="username" placeholder="Enter Username"/>
+                        <input onChange={(e) => {
+                            setUsername(e.target.value)
+                        }} type="text" name="username" placeholder="Enter Username"/>
                     </div>
                     <div className="input-group">
                         <label htmlFor="password">Password</label>
-                        <input type="password" name="password" placeholder="Enter Password"/>
+                        <input onChange={(e) => {
+                            setPassword(e.target.value)
+                        }} type="password" name="password" placeholder="Enter Password"/>
                     </div>
 
                     <button className="button primary-button">

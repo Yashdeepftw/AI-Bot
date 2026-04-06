@@ -65,18 +65,26 @@ async function registerUserController(req, res) {
 async function loginUserController(req, res) {
     const { email, password } = req.body;
 
+    console.log('Login attempt for email:', email);
+
     const user = await userModel.findOne({ email });
     
     if (!user) {
-        res.status(400).json({
-            msg: 'invaild email or password',
+        console.log('User not found for email:', email);
+        return res.status(400).json({
+            msg: 'invalid email or password',
         })
     }
 
+    console.log('User found:', user.username, 'comparing password');
+
     const isPasswordValid = await bcrypt.compare(password, user.password)
 
+    console.log('Password valid:', isPasswordValid);
+
     if (!isPasswordValid) {
-        res.status(400).json({
+        console.log('Invalid password for user:', user.username);
+        return res.status(400).json({
             msg: 'invalid email or password'
         })
     }
