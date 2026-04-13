@@ -30,29 +30,6 @@ const mongoose = require("mongoose");
  */
 
 
-const interviewReportSchema = new mongoose.Schema({
-    jobDescription: {
-        type: String,
-        required: [ true, "Job description is required"]
-    }, 
-    resume: {
-        type: String,
-    },
-    selfDescription: {
-        type: String
-    },
-    matchScore: {
-        type: Number,
-        min: 0,
-        max: 100
-    },
-    technicalQuestions: [ technicalQuestionsSchema ],
-    behavioralQuestions: [ behavioralQuestionSchema ],
-    skillGaps: [ skillGapSchema ],
-    preprationPlan: [ preprationPlanSchema ]
-}, {
-    timestamps: true
-})
 
 const technicalQuestionsSchema = new mongoose.Schema({
     question: {
@@ -116,6 +93,33 @@ const preprationPlanSchema = new mongoose.Schema({
     }]
 })
 
-const interviewReportModel = new mongoose.Model("InterviewReport", interviewReportSchema);
+const interviewReportSchema = new mongoose.Schema({
+    jobDescription: {
+        type: String,
+        required: [ true, "Job description is required"]
+    }, 
+    resume: {
+        type: String,
+    },
+    selfDescription: {
+        type: String
+    },
+    matchScore: {
+        type: Number,
+        min: 0,
+        max: 100
+    },
+    technicalQuestions: [ technicalQuestionsSchema ],
+    behavioralQuestions: [ behavioralQuestionSchema ],
+    skillGaps: [ skillGapSchema ],
+    preprationPlan: [ preprationPlanSchema ],
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "users"
+    }
+}, {
+    timestamps: true
+})
+const interviewReportModel = new mongoose.model("InterviewReport", interviewReportSchema);
 
 module.exports = interviewReportModel;
