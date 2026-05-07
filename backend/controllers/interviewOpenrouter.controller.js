@@ -1,21 +1,28 @@
-const pdfParse = require('pdf-parse');
+const pdf = require('pdf-parse');
 const { generateInterviewReportOpenRouter } = require('../services/openrouter.service');
 const interviewReportModel = require('../models/interview.model');
 
+/**
+ * @name generateInterviewReportOpenRouterController
+ * @description generate interview report using openrouter
+ * @access private
+ * @body {resume: string, selfDescription: string, jobDescription: string} OR upload resume as PDF file
+ */
 const generateInterviewReportOpenRouterController = async (req, res) => {
     try {
         let resumeContent = '';
 
         // Check if resume is uploaded as file or sent as text
-        if (req.file) {
+        if (req.file && req.file.buffer) {
             // Parse PDF file
-            const pdfData = await (new pdfParse.PDFParse(Uint8Array.from(req.file.buffer))).getText();
-            if (typeof pdfData === 'string') {
-                resumeContent = pdfData;
-            } else if (pdfData && typeof pdfData.text === 'string') {
-                resumeContent = pdfData.text;
-            } else {
-                throw new Error('Unable to extract resume text from uploaded PDF.');
+            try {
+                const data = await pdf(req.file.buffer);
+                resumeContent = data.text;
+            } catch (pdfError) {
+                return res.status(400).json({
+                    msg: 'Failed to parse PDF file. Please ensure it is a valid PDF.',
+                    error: pdfError.message
+                });
             }
         } else if (req.body.resume) {
             // Use resume text from request body
@@ -45,11 +52,12 @@ const generateInterviewReportOpenRouterController = async (req, res) => {
             resume: resumeContent,
             jobDescription,
             selfDescription,
-            ...interviewReportByAi
+            ...interviewReportByAi,
+            preprationPlan: interviewReportByAi.preparationPlan
         });
 
         res.status(201).json({
-            msg: 'Interview report generated Successfully',
+            msg: "Interview report generated successfully",
             interviewReport
         });
     } catch (error) {
@@ -61,4 +69,41 @@ const generateInterviewReportOpenRouterController = async (req, res) => {
     }
 };
 
-module.exports = { generateInterviewReportOpenRouterController };
+/**
+ * @description controller to get interview report by interviewId 
+ */
+const getInterviewReportByIdController = async (req, res) => {
+    try {
+        const { interviewId } = req.params;
+        const interviewReport = await interviewReportModel.findOne({ _id: interviewId, user: req.user.id});
+
+        if(!interviewReport) {
+            return res.status(404).json({
+                msg: "Interview report not found"
+            })
+        }
+
+        res.status(200).json({
+            msg: "Interview report fetched successfully",
+            interviewReport
+        })
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+/**
+ * @description controller to get all interview report of the loged in user
+ */
+const getAllInterviewReport = async (req, res) => {
+    const interviewReport = await interviewReportModel.find({ user: req.user.id }).sort({ createdAt: -1}).select("-resume -selfDescription -jobDescription -__v -technicalQuestions -behavioralQuestions -skillGaps -preprationPlan");
+
+    res.status(200).json({
+        msg: "Interview reports fetched successfully",
+        interviewReport
+    })
+
+}
+
+
+module.exports = { generateInterviewReportOpenRouterController, getInterviewReportByIdController, getAllInterviewReport };

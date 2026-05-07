@@ -1,9 +1,9 @@
 const pdfParse = require('pdf-parse');
 // const { generateInterviewReport } = require('../services/ai.service')
-const { generateInterviewReport } = require('../services/openrouter.service');
+const { generateInterviewReportOpenRouter } = require('../services/openrouter.service'); 
 const interviewReportModel = require('../models/interview.model');
 
-const generateInterviewReportController = async (req, res) => {
+const generateInterviewReportOpenRouterController = async (req, res) => {
     try {
         let resumeContent = '';
 
@@ -35,7 +35,7 @@ const generateInterviewReportController = async (req, res) => {
             });
         }
 
-        const interviewReportByAi = await generateInterviewReport({
+        const interviewReportByAi = await generateInterviewReportOpenRouter ({
             resume: resumeContent,
             selfDescription,
             jobDescription
@@ -46,7 +46,8 @@ const generateInterviewReportController = async (req, res) => {
             resume: resumeContent,
             jobDescription,
             selfDescription,
-            ...interviewReportByAi
+            ...interviewReportByAi,
+            preprationPlan: interviewReportByAi.preparationPlan
         });
 
         res.status(201).json({
@@ -62,4 +63,4 @@ const generateInterviewReportController = async (req, res) => {
     }
 }
 
-module.exports = { generateInterviewReportController }
+module.exports = { generateInterviewReportOpenRouterController }
