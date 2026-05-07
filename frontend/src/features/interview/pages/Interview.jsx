@@ -1,5 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router";
 import "../style/interview.scss";
+import { useInterview } from "../hook/useInterview";
+import { getInterviewReportById } from "../services/interview.api";
 
 const CodeIcon = () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -32,102 +35,85 @@ const ChevronUpIcon = () => (
     </svg>
 );
 
-const mockData = {
-  "_id": {
-    "$oid": "69de9d7d5b5d41066b0e64f8"
-  },
-  "matchScore": 60,
-  "technicalQuestions": [
-    {
-      "question": "Explain your approach to the job-relevant technical stack in a real project scenario.",
-      "intention": "Assess clarity of thought, practical understanding, and communication quality.",
-      "answer": "Use a structured answer: context, action, trade-offs, and measurable result."
-    },
-    {
-      "question": "Explain your approach to the job-relevant technical stack in a real project scenario.",
-      "intention": "Assess clarity of thought, practical understanding, and communication quality.",
-      "answer": "Use a structured answer: context, action, trade-offs, and measurable result."
-    },
-    {
-      "question": "Explain your approach to the job-relevant technical stack in a real project scenario.",
-      "intention": "Assess clarity of thought, practical understanding, and communication quality.",
-      "answer": "Use a structured answer: context, action, trade-offs, and measurable result."
-    }
-  ],
-  "behavioralQuestions": [
-    {
-      "question": "Explain your approach to team collaboration and problem solving in a real project scenario.",
-      "intention": "Assess clarity of thought, practical understanding, and communication quality.",
-      "answer": "Use a structured answer: context, action, trade-offs, and measurable result."
-    },
-    {
-      "question": "Explain your approach to team collaboration and problem solving in a real project scenario.",
-      "intention": "Assess clarity of thought, practical understanding, and communication quality.",
-      "answer": "Use a structured answer: context, action, trade-offs, and measurable result."
-    },
-    {
-      "question": "Explain your approach to team collaboration and problem solving in a real project scenario.",
-      "intention": "Assess clarity of thought, practical understanding, and communication quality.",
-      "answer": "Use a structured answer: context, action, trade-offs, and measurable result."
-    }
-  ],
-  "skillGaps": [
-    {
-      "skill": "System design and communication",
-      "severity": "medium"
-    }
-  ],
-  "preprationPlan": [
-    {
-      "day": 1,
-      "focus": "Interview preparation day 1",
-      "tasks": [
-        "Review job description and required skills",
-        "Practice concise answers for likely interview questions"
-      ],
-      "_id": {
-        "$oid": "69de9d7d5b5d41066b0e64f9"
-      }
-    },
-    {
-      "day": 2,
-      "focus": "Interview preparation day 2",
-      "tasks": [
-        "Review job description and required skills",
-        "Practice concise answers for likely interview questions"
-      ],
-      "_id": {
-        "$oid": "69de9d7d5b5d41066b0e64fa"
-      }
-    },
-    {
-      "day": 3,
-      "focus": "Interview preparation day 3",
-      "tasks": [
-        "Review job description and required skills",
-        "Practice concise answers for likely interview questions"
-      ],
-      "_id": {
-        "$oid": "69de9d7d5b5d41066b0e64fb"
-      }
-    }
-  ],
-  "user": {
-    "$oid": "69d3dabecf599c946eaed967"
-  },
-  "createdAt": {
-    "$date": "2026-04-14T20:03:09.163Z"
-  },
-  "updatedAt": {
-    "$date": "2026-04-14T20:03:09.163Z"
-  },
-  "__v": 0
-};
+const LogoutIcon = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+        <polyline points="16 17 21 12 16 7"></polyline>
+        <line x1="21" y1="12" x2="9" y2="12"></line>
+    </svg>
+);
+
+const PlusIcon = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+    </svg>
+);
 
 const Interview = () => {
-    const reportData = mockData;
-    const [activeTab, setActiveTab] = useState('behavioral'); // Defaulting to the screenshot view
+
+    const { interviewId } = useParams();
+    const navigate = useNavigate();
+    const { report, loading, getReportById } = useInterview();
+
+    const [activeTab, setActiveTab] = useState('behavioral');
     const [expandedQId, setExpandedQId] = useState(null);
+    const [fetchError, setFetchError] = useState(null);
+
+    // Resolve report: use context report if it matches current interviewId
+    const reportData = report?._id === interviewId ? report : null;
+
+
+
+    if (loading && !reportData) {
+        return (
+            <div className="interview-loading">
+                <div className="top-actions">
+                    <button className="action-btn primary" onClick={() => navigate('/')}>
+                        <PlusIcon /> Generate More Reports
+                    </button>
+                    <button className="action-btn" onClick={() => navigate('/logout')}>
+                        <LogoutIcon /> Logout
+                    </button>
+                </div>
+                <div className="loading-spinner"></div>
+                <p>Loading your report...</p>
+            </div>
+        );
+    }
+
+    if (fetchError) {
+        return (
+            <div className="interview-error" style={{color: '#f87171', padding: '2rem'}}>
+                <div className="top-actions">
+                    <button className="action-btn primary" onClick={() => navigate('/')}>
+                        <PlusIcon /> Generate More Reports
+                    </button>
+                    <button className="action-btn" onClick={() => navigate('/logout')}>
+                        <LogoutIcon /> Logout
+                    </button>
+                </div>
+                Error: {fetchError}
+            </div>
+        );
+    }
+
+    if (!reportData) {
+        return (
+            <div className="interview-loading">
+                <div className="top-actions">
+                    <button className="action-btn primary" onClick={() => navigate('/')}>
+                        <PlusIcon /> Generate More Reports
+                    </button>
+                    <button className="action-btn" onClick={() => navigate('/logout')}>
+                        <LogoutIcon /> Logout
+                    </button>
+                </div>
+                <div className="loading-spinner"></div>
+                <p>Preparing report...</p>
+            </div>
+        );
+    }
 
     const getScoreDetails = (score) => {
         if (score >= 80) return { color: '#22c55e', text: 'Strong match for this role', shadow: 'rgba(34, 197, 94, 0.25)' };
@@ -144,10 +130,24 @@ const Interview = () => {
         setExpandedQId(null);
     }
 
-    const { color: scoreColor, text: scoreText, shadow: scoreShadow } = getScoreDetails(reportData.matchScore);
+    const rawScore = reportData?.matchScore ?? reportData?.MatchScore ?? reportData?.score;
+    const parsedScore = typeof rawScore === "number"
+        ? rawScore
+        : Number(String(rawScore ?? "").match(/\d+(\.\d+)?/)?.[0]);
+    const displayScore = Number.isFinite(parsedScore) ? Math.max(0, Math.min(100, parsedScore)) : 67;
+
+    const { color: scoreColor, text: scoreText, shadow: scoreShadow } = getScoreDetails(displayScore);
 
     return (
         <main className="interview-dashboard">
+            <div className="top-actions">
+                <button className="action-btn primary" onClick={() => navigate('/')}>
+                    <PlusIcon /> Generate More Reports
+                </button>
+                <button className="action-btn" onClick={() => navigate('/logout')}>
+                    <LogoutIcon /> Logout
+                </button>
+            </div>
             {/* Sidebar Left */}
             <aside className="left-sidebar">
                 <div className="sidebar-section-title">SECTIONS</div>
@@ -170,12 +170,12 @@ const Interview = () => {
                     <div className="content-wrapper">
                         <div className="content-header">
                             <h2>Behavioral Questions</h2>
-                            <span className="badge">{reportData.behavioralQuestions.length} questions</span>
+                            <span className="badge">{reportData.behavioralQuestions?.length || 0} questions</span>
                         </div>
                         <div className="header-divider"></div>
-                        
+
                         <div className="accordion-list">
-                            {reportData.behavioralQuestions.map((q, i) => (
+                            {(reportData.behavioralQuestions || []).map((q, i) => (
                                 <div className={`accordion-item ${expandedQId === i ? 'expanded' : ''}`} key={i}>
                                     <div className="accordion-header" onClick={() => toggleAccordion(i)}>
                                         <div className="q-badge">Q{i + 1}</div>
@@ -200,12 +200,12 @@ const Interview = () => {
                     <div className="content-wrapper">
                         <div className="content-header">
                             <h2>Technical Questions</h2>
-                            <span className="badge">{reportData.technicalQuestions.length} questions</span>
+                            <span className="badge">{reportData.technicalQuestions?.length || 0} questions</span>
                         </div>
                         <div className="header-divider"></div>
-                        
+
                         <div className="accordion-list">
-                            {reportData.technicalQuestions.map((q, i) => (
+                            {(reportData.technicalQuestions || []).map((q, i) => (
                                 <div className={`accordion-item ${expandedQId === i ? 'expanded' : ''}`} key={i}>
                                     <div className="accordion-header" onClick={() => toggleAccordion(i)}>
                                         <div className="q-badge">Q{i + 1}</div>
@@ -225,23 +225,23 @@ const Interview = () => {
                         </div>
                     </div>
                 )}
-                
+
                 {activeTab === 'roadmap' && (
                     <div className="content-wrapper">
                         <div className="content-header">
                             <h2>Road Map</h2>
-                            <span className="badge">{reportData.preprationPlan.length} days</span>
+                            <span className="badge">{reportData.preprationPlan?.length || 0} days</span>
                         </div>
                         <div className="header-divider"></div>
 
                         <div className="roadmap-list">
-                            {reportData.preprationPlan.map((plan, i) => (
+                            {(reportData.preprationPlan || []).map((plan, i) => (
                                 <div className="roadmap-node" key={i}>
                                     <div className="node-marker">D{plan.day}</div>
                                     <div className="node-content">
                                         <h3>{plan.focus}</h3>
                                         <ul>
-                                            {plan.tasks.map((task, tIdx) => (
+                                            {(plan.tasks || []).map((task, tIdx) => (
                                                 <li key={tIdx}>{task}</li>
                                             ))}
                                         </ul>
@@ -258,14 +258,16 @@ const Interview = () => {
                 <div className="panel-section">
                     <div className="panel-title">MATCH SCORE</div>
                     <div className="score-wrapper">
-                        <div 
-                            className="score-ring-wrap" 
-                            style={{ 
+                        <div
+                            className="score-ring-wrap"
+                            style={{
                                 borderColor: scoreColor,
                                 boxShadow: `0 0 30px ${scoreShadow}`
                             }}
                         >
-                             <div className="inner-score">{reportData.matchScore}<span className="perc">%</span></div>
+                            <div className="inner-score">
+                                {displayScore}
+                            </div>
                         </div>
                         <div className="score-subtext" style={{ color: scoreColor }}>{scoreText}</div>
                     </div>
@@ -274,9 +276,9 @@ const Interview = () => {
                 <div className="panel-section mt-extra">
                     <div className="panel-title">SKILL GAPS</div>
                     <div className="gaps-list-vert">
-                        {reportData.skillGaps.map((gap, i) => (
-                            <div className={`gap-card severity-${gap.severity}`} key={i}>
-                                {gap.skill}
+                        {(reportData.skillGaps || []).map((gap, i) => (
+                            <div className={`gap-card severity-${gap?.severity || 'low'}`} key={i}>
+                                {gap?.skill}
                             </div>
                         ))}
                     </div>

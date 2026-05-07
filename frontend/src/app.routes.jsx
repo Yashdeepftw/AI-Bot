@@ -1,9 +1,11 @@
 import { createBrowserRouter } from 'react-router'
 import Login from './features/auth/pages/Login'
 import Register from './features/auth/pages/Register'
+import Logout from './features/auth/pages/Logout'
 import Protected from './features/auth/components/Protected'
 import Home from './features/interview/pages/Home'
-import Interview from './features/interview/pages/interview'
+import Interview from './features/interview/pages/Interview'
+import ResumeGenerator from './features/interview/pages/ResumeGenerator'
 
 export const router = createBrowserRouter([
     {
@@ -14,11 +16,18 @@ export const router = createBrowserRouter([
         path: '/register',
         element: <Register />
     }, {
+        path: '/logout',
+        element: <Logout />
+    }, {
         path: '/',
         element: <Protected> <Home /> </Protected>
     },
     {
         path: 'interview/:interviewId',
         element: <Interview />
+    },
+    {
+        path: '/generate-resume',
+        element: <Protected><ResumeGenerator /></Protected>
     }
 ])
